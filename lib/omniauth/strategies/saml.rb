@@ -80,8 +80,17 @@ module OmniAuth
         Digest::SHA1.hexdigest(cert.to_der).upcase.scan(/../).join(':')
       end
 
+      def on_metadata_path?
+        if options[:metadata_path].respond_to?(:call)
+          options[:metadata_path].call(env)
+        else
+          metadata_path = options[:metadata_path] || "#{request_path}/metadata"
+          on_path?(metadata_path)
+        end
+      end
+
       def other_phase
-        if on_path?("#{request_path}/metadata")
+        if on_metadata_path?
           # omniauth does not set the strategy on the other_phase
           @env['omniauth.strategy'] ||= self
           setup_phase
